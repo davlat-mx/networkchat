@@ -1,0 +1,21 @@
+services:
+  tcp-server:
+    build: .
+    environment:
+      MAIN_CLASS: org.dave.networkchat.tcp.TcpServer
+    ports:
+      - "8083:8083"
+
+  ws-server:
+    build: .
+    environment:
+      MAIN_CLASS: org.dave.networkchat.ws.WsServer
+    ports:
+      - "8082:8082"
+
+  rest-server:
+    build: .
+    environment:
+      MAIN_CLASS: org.dave.networkchat.rest.RestServer
+    ports:
+      - "8081:8081"
