@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class RestClient {
 
-    private static final String BASE_URL = "http://localhost:8081";
+    private static final String BASE_URL = "http://" + System.getenv().getOrDefault("SERVER_HOST", "localhost") + ":8081";
     private static final String DEFAULT_NAME = "RestUser";
     private static final String DEFAULT_ROOM = "general";
     private static final String COMMANDS_HINT = "Commands: /nick NAME, /room, /exit";

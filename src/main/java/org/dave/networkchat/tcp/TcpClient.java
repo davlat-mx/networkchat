@@ -9,7 +9,7 @@ import java.net.Socket;
 
 public class TcpClient {
 
-    private static final String HOST = "localhost";
+    private static final String HOST = System.getenv().getOrDefault("SERVER_HOST", "localhost");
     private static final int PORT = 8083;
     private static final String COMMANDS_HINT = "Commands: /join ROOM, /exit";
     private static final String ERROR_LOG_PREFIX = "[TCP-CLIENT] Error: ";

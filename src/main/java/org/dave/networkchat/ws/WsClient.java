@@ -11,7 +11,7 @@ import java.util.concurrent.CompletionStage;
 
 public class WsClient {
 
-    private static final String HOST = "ws://localhost:8082/chat";
+    private static final String HOST = "ws://" + System.getenv().getOrDefault("SERVER_HOST", "localhost") + ":8082/chat";
     private static final String DEFAULT_NAME = "WsUser";
     private static final String DEFAULT_ROOM = "general";
     private static final String COMMANDS_HINT = "Commands: /nick NAME, /exit";
