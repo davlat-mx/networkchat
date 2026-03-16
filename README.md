@@ -1,13 +1,13 @@
 # Network Chat
 
-A multi-protocol chat server written in Java 17. Demonstrates the same chat room logic exposed over three different transports: raw TCP, WebSocket, and HTTP with Server-Sent Events (REST+SSE). All protocols share a single in-memory `ChatService`.
+A multi-protocol chat server written in Java 17. Demonstrates the same chat room logic exposed over three different transports: raw TCP, WebSocket, and HTTP with Server-Sent Events (REST+SSE). All protocols share a single in-memory `ChatService` with shared chat history.
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────┐
-│   ChatService  (rooms + broadcast)  │
-└────────────┬──────────┬─────────────┘
+┌─────────────────────────────────────────────┐
+│   ChatService  (rooms + broadcast + history) │
+└────────────┬──────────┬─────────────────────┘
              │          │          │
         TcpSession  WsSession  RestSession
              │          │          │
@@ -53,14 +53,19 @@ docker compose down
 
 ## In-chat commands
 
-| Protocol | Commands |
-|----------|----------|
-| TCP | `/join ROOM` — switch room · `/exit` — disconnect |
-| WebSocket | `/nick NAME` — change username · `/exit` — disconnect |
-| REST+SSE | `/nick NAME` — change username · `/room` — show current room · `/exit` — disconnect |
+All commands are available across every protocol:
 
-WebSocket clients set their name and room when connecting (prompted by `client.sh`).
+| Command | Description |
+|---------|-------------|
+| `/join ROOM` | Switch to another room (or create it) |
+| `/rooms` | List all active rooms with user counts |
+| `/nick NAME` | Change your display name |
+| `/room` | Show the name of your current room |
+| `/help` | Show all available commands |
+| `/exit` | Disconnect from chat |
+
 TCP clients are prompted for name and room interactively after connecting.
+WebSocket and REST clients set their name and room when connecting (prompted by `client.sh`).
 
 ---
 
@@ -97,9 +102,16 @@ networkchat/
 ├── pom.xml
 └── src/main/java/org/dave/networkchat/
     ├── core/
-    │   ├── ChatService.java     # Room management & broadcast
-    │   └── ClientSession.java   # Protocol-agnostic session interface
+    │   ├── model/
+    │   │   ├── ChatMessage.java       # Message entity (Lombok)
+    │   │   └── ChatMessageType.java   # CHAT / SYSTEM enum
+    │   ├── service/
+    │   │   ├── ChatService.java       # Room management, broadcast, history, /rooms, /help
+    │   │   ├── ChatServiceFactory.java# Shared singleton factory
+    │   │   └── ClientSession.java     # Protocol-agnostic session interface
+    │   ├── ChatHistory.java           # History store interface
+    │   └── ChatHistoryImpl.java       # In-memory ConcurrentHashMap implementation
     ├── tcp/    TcpServer · TcpSession · TcpClient
-    ├── ws/     WsServer  · WsSession  · WsClient
+    ├── ws/     WsServer  · WsChatServer · WsSession · WsClient
     └── rest/   RestServer · RestSession · RestClient
 ```

@@ -1,6 +1,6 @@
 package org.dave.networkchat.ws;
 
-import org.dave.networkchat.core.ClientSession;
+import org.dave.networkchat.core.service.ClientSession;
 import org.java_websocket.WebSocket;
 
 import java.util.UUID;

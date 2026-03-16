@@ -1,7 +1,7 @@
 package org.dave.networkchat.tcp;
 
-import org.dave.networkchat.core.ChatService;
-import org.dave.networkchat.core.ClientSession;
+import org.dave.networkchat.core.service.ChatService;
+import org.dave.networkchat.core.service.ClientSession;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,7 +15,7 @@ public class TcpSession implements Runnable, ClientSession {
 
     private static final String DEFAULT_NAME = "TcpUser";
     private static final String DEFAULT_ROOM = "general";
-    private static final String COMMANDS_HINT = "/join ROOM, /exit";
+    private static final String COMMANDS_HINT = "/join ROOM, /rooms, /nick NAME, /help, /exit";
 
     private final Socket socket;
     private final BufferedReader socketReader;
@@ -38,30 +38,67 @@ public class TcpSession implements Runnable, ClientSession {
     public void run() {
         try {
             readClientProfile();
-
             chatService.joinRoom(room, this);
             send("SERVER: connected. room=" + room + " name=" + name + " | commands: " + COMMANDS_HINT);
-
-            String line;
-            while ((line = socketReader.readLine()) != null) {
-
-                if (line.equalsIgnoreCase("/exit")) {
-                    break;
-                }
-
-                if (line.startsWith("/join ")) {
-                    String newRoom = line.substring(6).trim();
-                    chatService.joinRoom(newRoom, this);
-                    continue;
-                }
-
-                chatService.broadcast(room, "[" + name + "]: " + line);
-            }
-
+            processMessages();
         } catch (IOException ignored) {
         } finally {
             close();
         }
+    }
+
+    private void processMessages() throws IOException {
+        String line;
+        while ((line = socketReader.readLine()) != null) {
+            if (line.equalsIgnoreCase("/exit")) {
+                break;
+            }
+            if (tryHandleJoin(line)) {
+                continue;
+            }
+            if (tryHandleNick(line)) {
+                continue;
+            }
+            if (line.equalsIgnoreCase("/rooms")) {
+                chatService.sendRoomList(this);
+                continue;
+            }
+            if (line.equalsIgnoreCase("/help")) {
+                chatService.sendHelp(this);
+                continue;
+            }
+            if (line.isBlank()) {
+                continue;
+            }
+            chatService.sendChatMessage(room, name, line);
+        }
+    }
+
+    private boolean tryHandleJoin(String line) {
+        if (!line.startsWith("/join ")) {
+            return false;
+        }
+        String newRoom = line.substring(6).trim();
+        if (newRoom.isBlank()) {
+            send("SERVER: room name must not be blank");
+            return true;
+        }
+        chatService.joinRoom(newRoom, this);
+        send("SERVER: switched to room=" + room);
+        return true;
+    }
+
+    private boolean tryHandleNick(String line) {
+        if (!line.startsWith("/nick ")) {
+            return false;
+        }
+        String newName = line.substring(6).trim();
+        if (!newName.isBlank()) {
+            String oldName = name;
+            name = newName;
+            chatService.sendChatMessage(room, "SERVER", oldName + " is now " + newName);
+        }
+        return true;
     }
 
     private void readClientProfile() throws IOException {

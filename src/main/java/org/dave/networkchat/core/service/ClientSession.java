@@ -1,4 +1,4 @@
-package org.dave.networkchat.core;
+package org.dave.networkchat.core.service;
 
 public interface ClientSession {
 

@@ -11,7 +11,7 @@ public class TcpClient {
 
     private static final String HOST = System.getenv().getOrDefault("SERVER_HOST", "localhost");
     private static final int PORT = 8083;
-    private static final String COMMANDS_HINT = "Commands: /join ROOM, /exit";
+    private static final String COMMANDS_HINT = "Commands: /join ROOM, /rooms, /nick NAME, /help, /exit";
     private static final String ERROR_LOG_PREFIX = "[TCP-CLIENT] Error: ";
 
     public static void main(String[] args) {
@@ -23,27 +23,35 @@ public class TcpClient {
             System.out.println("[TCP-CLIENT] Connected to tcp://" + HOST + ":" + PORT);
             System.out.println(COMMANDS_HINT);
 
-            Thread reader = new Thread(() -> {
-                try {
-                    String message;
-                    while ((message = serverIn.readLine()) != null) {
-                        System.out.println(message);
-                    }
-                } catch (IOException ignored) {
-                }
-            });
-            reader.start();
-
-            String line;
-            while ((line = consoleIn.readLine()) != null) {
-                serverOut.println(line);
-                if (line.equalsIgnoreCase("/exit")) {
-                    break;
-                }
-            }
+            startServerReader(serverIn);
+            processInput(consoleIn, serverOut);
 
         } catch (IOException e) {
             System.out.println(ERROR_LOG_PREFIX + e.getMessage());
+        }
+    }
+
+    private static void startServerReader(BufferedReader serverIn) {
+        Thread reader = new Thread(() -> {
+            try {
+                String message;
+                while ((message = serverIn.readLine()) != null) {
+                    System.out.println(message);
+                }
+            } catch (IOException ignored) {
+            }
+        });
+        reader.setDaemon(true);
+        reader.start();
+    }
+
+    private static void processInput(BufferedReader consoleIn, PrintWriter serverOut) throws IOException {
+        String line;
+        while ((line = consoleIn.readLine()) != null) {
+            serverOut.println(line);
+            if (line.equalsIgnoreCase("/exit")) {
+                break;
+            }
         }
     }
 }

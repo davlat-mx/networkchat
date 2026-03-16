@@ -1,6 +1,7 @@
 package org.dave.networkchat.tcp;
 
-import org.dave.networkchat.core.ChatService;
+import org.dave.networkchat.core.service.ChatService;
+import org.dave.networkchat.core.service.ChatServiceFactory;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -12,7 +13,7 @@ public class TcpServer {
     private static final String STARTUP_LOG_TEMPLATE = "[TCP] Chat server started on tcp://localhost:";
 
     public static void main(String[] args) throws IOException {
-        ChatService chatService = new ChatService();
+        ChatService chatService = ChatServiceFactory.createChatService();
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println(STARTUP_LOG_TEMPLATE + PORT);
